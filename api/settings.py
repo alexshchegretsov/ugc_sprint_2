@@ -1,0 +1,36 @@
+import os
+from urllib.parse import quote_plus as quote
+
+JWT_ALGORITHM = 'RS256'
+
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+KAFKA_PRODUCER_USERNAME = os.getenv('KAFKA_PRODUCER_USERNAME')
+KAFKA_PRODUCER_PASSWORD = os.getenv('KAFKA_PRODUCER_PASSWORD')
+USERS_VIEWS_FILMS_TOPIC = 'users_views_films'
+COMPRESSION_TYPE = 'gzip'
+MAX_BATCH_SIZE = 20_000  # bytes
+
+# redis settings
+REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_CACHE_DB = 3
+
+PUBLIC_KEY = os.getenvb(b'PUBLIC_KEY')
+
+MONGO_USER = os.getenv('MONGO_USER')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
+MONGO_HOSTS = os.getenv('MONGO_HOSTS')
+MONGO_CONNECT_URI_TEMPLATE = os.getenv('MONGO_CONNECT_URI_TEMPLATE')
+MONGO_RS = os.getenv('MONGO_RS')
+MONGO_AUTH_SRC = os.getenv('MONGO_AUTH_SRC')
+MONGO_CONNECT_URI = MONGO_CONNECT_URI_TEMPLATE.format(
+    user=quote(MONGO_USER),
+    pw=quote(MONGO_PASSWORD),
+    hosts=MONGO_HOSTS,
+    auth_src=MONGO_AUTH_SRC
+)
+API_SENTRY_DSN = os.getenv('API_SENTRY_DSN')
+
+LOGSTASH_HOST = os.getenv('LOGSTASH_HOST')
+LOGSTASH_PORT = os.getenv('LOGSTASH_PORT')
