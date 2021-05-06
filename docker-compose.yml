@@ -1,0 +1,115 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: builds/api/Dockerfile
+    container_name: sanic_api
+    volumes:
+      - ./builds/api/conf.d:/etc/supervisor/conf.d
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_PRODUCER_USERNAME: ${KAFKA_PRODUCER_USERNAME}
+      KAFKA_PRODUCER_PASSWORD: ${KAFKA_PRODUCER_PASSWORD}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB_NAME: ${MONGO_DB_NAME}
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_CONNECT_URI: ${MONGO_CONNECT_URI}
+      API_SENTRY_DSN: ${SENTRY_DSN}
+      LOGSTASH_HOST: ${LOGSTASH_HOST}
+      LOGSTASH_PORT: ${LOGSTASH_PORT}
+      PUBLIC_KEY: |-
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA19RTsWM6yhu26erx5NEQ
+        FTsbULLJwe754b8W9Xbbq8zCwjMGXXvJsIfqSwQrMWy/4VC5HQ+aA1ueM610qU+k
+        mxfGl3RM8Ze6NjaMt2i9wGirB0rKNplINB9tnHfhyWniUTADf+TtoU6/4LxsuZRF
+        +xc6MkB96hFEFCupJQE3rDhJuKI41FrepO+gCi7pSKMAjMZAeeMb7PWUQ+gDBewC
+        P8PciRIL2L6xsypMswduCrHDiWpBn8aykFsYWs2gWal7tXn1weQ5dFTJoA4i8zOT
+        zKPIDDplr9xe5zkhzEtEF2zRPvarr3rMx/8THWX4GheiyZFdd3wA28FprUEGOECK
+        6wIDAQAB
+        -----END PUBLIC KEY-----
+    restart: always
+
+  etl:
+    build:
+      context: .
+      dockerfile: builds/etl/Dockerfile
+    volumes:
+      - ./builds/etl/conf.d:/etc/supervisor/conf.d
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_CONSUMER_USERNAME: ${KAFKA_CONSUMER_USERNAME}
+      KAFKA_CONSUMER_PASSWORD: ${KAFKA_CONSUMER_PASSWORD}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      ETL_SENTRY_DSN: ${ETL_SENTRY_DSN}
+    depends_on:
+      - api
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis_auth
+    expose:
+      - 6379
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    ports:
+      - 80:80
+    volumes:
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/nginx/api.conf:/etc/nginx/conf.d/api.conf:ro
+      - /tmp/log/nginx/:/var/log/nginx/
+    depends_on:
+      - api
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.3.2
+    volumes:
+      - /tmp/log/nginx:/var/log/nginx
+      - ./conf/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      - app
+      - nginx
+      - logstash
+      - elasticsearch
+      - kibana
+    links:
+      - logstash
+
+    logstash:
+      image: docker.elastic.co/logstash/logstash:7.10.2
+      environment:
+        XPACK_MONITORING_ENABLED: "true"
+        ES_HOST: "elasticsearch:9200"
+      ports:
+        - "5044:5044/udp"
+      volumes:
+        - ./conf/logstash.conf:/config/logstash.conf:ro
+      command: logstash -f /config/logstash.conf
+
+    elasticsearch:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+      environment:
+        discovery.type: single-node
+      ports:
+        - 9200:9200
+      volumes:
+        - /tmp/esdata:/tmp/elasticsearch/data
+
+    kibana:
+      image: docker.elastic.co/kibana/kibana:7.10.2
+      ports:
+        - "5601:5601"
+      depends_on:
+        - elasticsearch

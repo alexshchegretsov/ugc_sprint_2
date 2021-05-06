@@ -1,0 +1,70 @@
+@startuml
+skinparam componentStyle uml1
+
+agent desktop
+agent mobile
+agent smartTV
+cloud "world wide web" as web {
+}
+
+title online-cinema
+
+node api_gateway
+database "In memory\nkey-value storage"  as redis
+node service_admin {
+    component admin_balancer
+    database admin_rdbms as postgres_admin
+    admin_balancer <--> [admin_web_app]
+    [admin_web_app] <-> postgres_admin
+}
+node service_auth {
+    component auth_balancer
+    database auth_rdbms as postgres_auth
+    auth_balancer <--> [async_auth_web_app]
+    [async_auth_web_app] <-> postgres_auth
+}
+node service_async_api {
+    component api_balancer
+    database nosql_db as elastic
+    api_balancer <--> [async_web_api]
+    [async_web_api] <-> elastic
+}
+node service_etl
+
+node service_ugc as ugc {
+        component ugc_balancer
+        [async_ugc_web_app] as ugc_web_app
+        queue message_broker
+        node etl
+        database OLAP
+        ugc_balancer --> ugc_web_app
+    }
+note top of ugc_balancer: "Sticky sessions"
+file etl_script
+
+desktop <--> web
+mobile <--> web
+smartTV <--> web
+
+web <--> api_gateway
+api_gateway <--> service_auth
+api_gateway <--> service_async_api
+api_gateway <--> service_admin
+api_gateway --> ugc
+postgres_admin <----> service_etl
+elastic <--- service_etl
+[async_auth_web_app] <----> redis
+[async_web_api] <----> redis
+
+ugc_web_app --[dashed,#Blue]--> redis
+ugc_web_app ---> message_broker
+message_broker --(0- etl
+etl --> OLAP
+
+redis <-[dashed,#Blue]--> etl_script
+message_broker <-[dashed,#Blue]- etl_script
+
+legend left
+    |<#0000FF>     | Buffering messages\n Upload messages to broker by means of etl script every 1min |
+end legend
+@enduml
