@@ -6,7 +6,7 @@ from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, text
 
-movie_reviews_bp = Blueprint(name='movie reviews', url_prefix='/')
+movie_reviews_bp = Blueprint(name='movie reviews')
 
 DEFAULT_PERIOD = 30
 DEFAULT_PER_PAGE = 100

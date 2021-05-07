@@ -5,7 +5,7 @@ from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, text
 
-movie_marks_bp = Blueprint(name='movie marks', url_prefix='/')
+movie_marks_bp = Blueprint(name='movie marks')
 
 
 @movie_marks_bp.route('/users/<user_id:string>/movies/<movie_id:string>/mark/<mark:int>', methods=['POST'])

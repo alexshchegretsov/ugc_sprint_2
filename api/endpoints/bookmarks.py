@@ -5,7 +5,7 @@ from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json, text
 
-bookmarks_bp = Blueprint(name='bookmarks', url_prefix='/')
+bookmarks_bp = Blueprint(name='bookmarks')
 
 
 @bookmarks_bp.route('/users/<user_id:string>/bookmarks/movies/<movie_id:string>', methods=['POST'])
@@ -28,7 +28,7 @@ async def delete_bookmark(request: Request, user_id: str, bookmark_id: str):
 async def list_bookmark(request: Request, user_id: str):
     docs = []
 
-    async for doc in request.app.ctx.mongo.bookmarks.find({'user_id': user_id}):
+    async for doc in request.app.mongo.bookmarks.find({'user_id': user_id}):
         docs.append(doc)
 
     return json(docs, 200)
