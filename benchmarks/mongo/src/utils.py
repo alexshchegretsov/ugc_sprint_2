@@ -17,15 +17,17 @@ def timer(iterations: int = BENCHMARK_ITERATIONS):
         @wraps(fn)
         def inner(*args, **kwargs):
             run_times = []
+            result = None
             for _ in range(iterations):
                 start_time = time.perf_counter()
-                fn(*args, **kwargs)
+                result = fn(*args, **kwargs)
                 end_time = time.perf_counter()
                 run_times.append(end_time - start_time)
 
             avg_time = sum(run_times) / len(run_times)
 
-            print(f'Average execution time for {fn.__name__} (over {iterations} runs): {avg_time:.4f} seconds\n')
+            print(f'Average execution time for {fn.__name__} (over {iterations} runs): {avg_time:.4f} seconds')
+            print(f'Execution result:\n {result}\n')
 
         return inner
 
