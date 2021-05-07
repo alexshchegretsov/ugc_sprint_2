@@ -20,6 +20,7 @@ def upload_users_documents():
 
 
 def upload_movie_ratings_and_reviews(movie_id):
+    # https://pymongo.readthedocs.io/en/stable/faq.html?highlight=never%20do%20this#using-pymongo-with-multiprocessing
     client = MongoClient(MONGO_HOST, MONGO_PORT)
     db = client.get_database(DB_NAME)
 
@@ -35,6 +36,8 @@ def upload_movie_ratings_and_reviews(movie_id):
     if reviews:
         reviews_coll = db.get_collection('reviews')
         reviews_coll.insert_many(reviews, ordered=False)
+
+    client.close()
 
 
 if __name__ == '__main__':

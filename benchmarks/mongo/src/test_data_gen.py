@@ -9,8 +9,8 @@ Faker.seed(0)
 USERS_COUNT = 500_000
 MOVIES_COUNT = 20_000
 
-MAX_MOVIES_PER_USER = 20
-MAX_BOOKMARKS_PER_USER = 50
+MOVIES_PER_USER = 20
+BOOKMARKS_PER_USER = 50
 
 MAX_RATING = 10
 MIN_RATING = 1
@@ -32,19 +32,18 @@ movie_ids = [get_uuid() for _ in range(MOVIES_COUNT)]
 
 
 def generate_user_documents():
-    number_of_bookmarks = random.randint(0, MAX_BOOKMARKS_PER_USER)
-    bookmarks = [
-        movie_id for movie_id in random.sample(movie_ids, number_of_bookmarks)
-    ]
     for user_id in user_ids:
         yield {
             '_id': user_id,
-            'bookmarks': bookmarks
+            'bookmarks': [
+                movie_id for movie_id
+                in random.sample(movie_ids, BOOKMARKS_PER_USER)
+            ]
         }
 
 
 def _generate_movie_ratings(movie_id: str):
-    ratings_qty = random.randint(0, MAX_RATINGS_PER_MOVIE)
+    ratings_qty = random.randint(1, MAX_RATINGS_PER_MOVIE)
     ratings_sum = 0
     ratings = []
     rating_authors_ids = random.sample(user_ids, ratings_qty)
@@ -64,13 +63,13 @@ def _generate_movie_ratings(movie_id: str):
 
 def _generate_reviews(movie_id, movie_ratings):
     reviews = []
-    reviews_qty = random.randint(0, min(MAX_REVIEWS_PER_MOVIE, len(movie_ratings)))
+    reviews_qty = random.randint(1, min(MAX_REVIEWS_PER_MOVIE, len(movie_ratings)))
     related_movie_ratings = random.sample(movie_ratings, reviews_qty)
     for rating_data in related_movie_ratings:
         rating_id = rating_data.get('_id')
         rating_score = rating_data.get('score')
         author_id = rating_data.get('user_id')
-        review_rating_qty = random.randint(0, MAX_REVIEW_RATINGS_QTY)
+        review_rating_qty = random.randint(1, MAX_REVIEW_RATINGS_QTY)
         review_rating_sum = sum(
             random.randint(MIN_RATING, MAX_RATING) for _ in range(review_rating_qty)
         )
