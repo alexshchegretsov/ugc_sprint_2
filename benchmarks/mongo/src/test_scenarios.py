@@ -84,7 +84,7 @@ def add_bookmark(user_id, movie_id):
         {'$addToSet': {'bookmarks': movie_id}}
     )
 
-    return f'Updated {result.matched_count} users bookmarks'
+    return f'Added bookmark for movie: {movie_id} to user: {user_id}'
 
 
 @timer()
