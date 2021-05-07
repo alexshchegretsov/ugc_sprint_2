@@ -32,14 +32,13 @@ movie_ids = [get_uuid() for _ in range(MOVIES_COUNT)]
 
 
 def generate_user_documents():
-    number_of_bookmarks = random.randint(0, MAX_BOOKMARKS_PER_USER)
-    bookmarks = [
-        movie_id for movie_id in random.sample(movie_ids, number_of_bookmarks)
-    ]
     for user_id in user_ids:
         yield {
             '_id': user_id,
-            'bookmarks': bookmarks
+            'bookmarks': [
+                movie_id for movie_id
+                in random.sample(movie_ids, BOOKMARKS_PER_USER)
+            ]
         }
 
 
