@@ -67,20 +67,24 @@ def add_movie_rating(movie_id, user_id, score):
         'score': score,
     }
 
-    MOVIE_RATINGS.insert_one(rating_doc)
+    rating_id = MOVIE_RATINGS.insert_one(rating_doc).inserted_id
 
     MOVIES.update_one(
         {'_id': movie_id},
         {'$inc': {'ratings_sum': score, 'ratings_qty': 1}}
     )
 
+    return f'Inserted rating with id: {rating_id}'
+
 
 @timer()
 def add_bookmark(user_id, movie_id):
-    USERS.update_one(
+    result = USERS.update_one(
         {'_id': user_id},
         {'$addToSet': {'bookmarks': movie_id}}
     )
+
+    return f'Updated {result.matched_count} users bookmarks'
 
 
 @timer()
@@ -111,7 +115,9 @@ def add_review(user_id, movie_id, score):
         {'_id': movie_id},
         {'$inc': {'ratings_sum': score, 'ratings_qty': 1}}
     )
-    REVIEWS.insert_one(review_doc)
+    review_id = REVIEWS.insert_one(review_doc).inserted_id
+
+    return f'Added movie_review with id: {review_id}'
 
 
 READ_SCENARIOS = [
