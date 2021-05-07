@@ -1,6 +1,6 @@
 import logging
 
-from sanic.request import Request
+import aiotask_context as context
 
 
 def create_key(user_id, movie_id) -> bytes:
@@ -10,5 +10,5 @@ def create_key(user_id, movie_id) -> bytes:
 class RequestIdFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
-        record.request_id = Request.id
+        record.request_id = context.get('X-Request-ID', 'undefined')
         return True

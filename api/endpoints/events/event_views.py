@@ -1,5 +1,8 @@
+from sanic import Blueprint
+from sanic.request import Request
+from sanic.response import json, text
+
 from helpers import create_key
-from sanic import Blueprint, Request, text
 from settings import USERS_VIEWS_FILMS_TOPIC
 
 event_view_bp = Blueprint(name='views', url_prefix='/views')
@@ -20,5 +23,5 @@ async def view_films(request: Request):
 
     # aiokafka natively uses buffer space defined in app setup (max_batch_size).
     # After this amount `send` coroutine will block until batch is drained.
-    await request.app.ctx.producer.send(topic=USERS_VIEWS_FILMS_TOPIC, key=create_key(user_id, movie_id), value=data)
+    await request.app.producer.send(topic=USERS_VIEWS_FILMS_TOPIC, key=create_key(user_id, movie_id), value=data)
     return text('Accepted', 202)
